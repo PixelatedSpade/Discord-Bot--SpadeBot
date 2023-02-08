@@ -23,7 +23,7 @@ client.once(Events.ClientReady, (clientUser) => {
 client.login(process.env.BOT_TOKEN)
 
 const BOT_CHANNEL = "1071865012051779594"
-const PAST_MESSAGES = 2
+const PAST_MESSAGES = 1
 
 client.on(Events.MessageCreate, async (message) => {
     if (message.author.bot) return
