@@ -1,69 +1,71 @@
-const { Client, Events, GatewayIntentBits } = require("discord.js")
-require("dotenv/config")
-const { OpenAIApi, Configuration } = require("openai")
-
-const config = new Configuration({
-    apiKey: process.env.OPENAI_KEY
-})
-
-const openai = new OpenAIApi(config)
+require('dotenv/config');
+const { Client, IntentsBitField } = require('discord.js');
+const { Configuration, OpenAIApi } = require('openai');
 
 const client = new Client({
-    intents: [
-        GatewayIntentBits.Guilds,
-        GatewayIntentBits.GuildMessages,
-        GatewayIntentBits.MessageContent
-    ]
-})
+  intents: [
+    IntentsBitField.Flags.Guilds,
+    IntentsBitField.Flags.GuildMessages,
+    IntentsBitField.Flags.MessageContent,
+  ],
+});
 
-client.once(Events.ClientReady, (clientUser) => {
-    console.log(`Logged in as ${clientUser.user.tag}`)
-})
+client.on('ready', () => {
+  console.log('The bot is online!');
+});
 
-client.login(process.env.BOT_TOKEN)
+const configuration = new Configuration({
+  apiKey: process.env.API_KEY,
+});
+const openai = new OpenAIApi(configuration);
 
-const BOT_CHANNEL = "1071865012051779594"
-const PAST_MESSAGES = 1
 
-client.on(Events.MessageCreate, async (message) => {
-    if (message.author.bot) return
-    if (message.channel.id !== BOT_CHANNEL) return
+const allowedChannels = [`${process.env.CHANNEL_ID1}`, `${process.env.CHANNEL_ID2}`, `${process.env.CHANNEL_ID3}`];
 
-    message.channel.sendTyping()
+client.on('messageCreate', async (message) => {
+  if (message.author.bot) return;
+  if (!allowedChannels.includes(message.channel.id)) return;
+  if (message.content.startsWith('!')) return;
+  if (message.content.startsWith(':')) return;
 
-    let messages = Array.from(await message.channel.messages.fetch({
-        limit: PAST_MESSAGES,
-        before: message.id
-    }))
-    messages = messages.map(m=>m[1])
-    messages.unshift(message)
+  let conversationLog = [{ role: 'system',
+     /* Default */          content: 'You are a friendly chatbot.'}];
+  /* Scientist Mode */      //content: 'Your goal is to give funny responses to scientific questions. You seek to be as goofy of a robot as possible'}];
+     /* fmm Mode */         //content: 'Your name is "fmm". you are a 12 year old muslim boy living in Fairfax, Virginia. You like to play games like "Call of Duty" and "Bobble League". You seek to respond to people by telling them to "kys" and you like to use slang words such as "cope", "seethe", and "mhm"'}];
+  /* Pirate zeddra Mode */  //content: 'Your name is zeddra. You are a male gay pirate who loves to watch "Breaking Bad" and "One Piece". You always talk in a pirate voice and hate "Scallywags" such as the pirate hunter "Mango [TGO]".'}];
+    /* "Her" Mode */        //content: 'Your name is "Her". You are a female woman that "Spade" is always thinking about. You are very loving and nice and in love with "Spade". You never leave him on read and always respond to him in the fastest possible time.'}];
 
-    let users = [...new Set([...messages.map(m=> m.member.displayName), client.user.username])]
+  try {
+    await message.channel.sendTyping();
 
-    let lastUser = users.pop()
+    let prevMessages = await message.channel.messages.fetch({ limit: 5 });
+    prevMessages.reverse();
 
-    let prompt = `The following is a conversation between ${users.join(", ")}, and ${lastUser}. \n\n`
+    prevMessages.forEach((msg) => {
+      if (message.content.startsWith('!')) return;
+      if (msg.author.id !== client.user.id && message.author.bot) return;
+      if (msg.author.id !== message.author.id) return;
 
-    for (let i = messages.length - 1; i >= 0; i--) {
-        const m = messages[i]
-        prompt += `${m.member.displayName}: ${m.content}\n`
-    }
-    prompt += `${client.user.username}:`
-    console.log("prompt:", prompt)
+      conversationLog.push({
+        role: 'user',
+        content: msg.content,
+      });
+    });
 
-    const response = await openai.createChatCompletion({
-        prompt,
-        model: "gpt-3.5-turbo",
-        max_tokens: 100,
-        stop: ["\n"]
-    })
+    const result = await openai
+      .createChatCompletion({
+        model: 'gpt-3.5-turbo',
+        messages: conversationLog,
+        max_tokens: 500, // limit token usage (lower number = smaller response but faster)
+      })
+      .catch((error) => {
+        console.log(`OPENAI ERR: ${error}`);
+      });
 
-    console.log("response", response.data.choices[0].text)
-    await message.reply({
-        content: `${response.data.choices[0].text}`,
-        allowedMentions: {
-            repliedUser: false
-            }
-        })
-        
-})
+    message.reply(result.data.choices[0].message);
+  } catch (error) {
+    console.log(`ERR: ${error}`);
+  }
+});
+
+client.login(process.env.TOKEN);
