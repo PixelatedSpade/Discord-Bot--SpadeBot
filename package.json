@@ -8,7 +8,7 @@
     "start": "node index.js"
   },
   "keywords": [],
-  "author": "",
+  "author": "PixelatedSpade",
   "license": "ISC",
   "dependencies": {
     "discord.js": "^14.8.0",
