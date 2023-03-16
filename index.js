@@ -117,54 +117,54 @@ client.on("messageCreate", async (message) => {
   } catch (error) {
     console.log(`ERR: ${error}`);
   }
+});
 
-  // #Image Generation
-  client.on("messageCreate", async (msg) => {
-    /* Admin Overwrite */ //if (msg.author.id != '523571466835460107') return;
-    if (msg.author.bot) return;
-    if (msg.content.startsWith("<")) return;
-    if (msg.content.startsWith("https://")) return;
-    if (
-      msg.content.startsWith("!generate") ||
-      msg.content.startsWith("!gen") ||
-      msg.content.startsWith("!g")
-    ) {
-      try {
-        const prompt = msg.content.split(" ").slice(1).join(" ");
-        await msg.channel.sendTyping();
-        if (msg.author.id == "323321535643516928") {
-          console.log(
-            "\x1b[35m%s\x1b[0m",
-            `${msg.author.username}'s prompt: "${prompt}"`
-          );
-        } else if (msg.author.id == "668139777773666434") {
-          console.log(
-            "\x1b[33m%s\x1b[0m",
-            `${msg.author.username}'s prompt: "${prompt}"`
-          );
-        } else {
-          console.log(
-            "\x1b[37m%s\x1b[0m",
-            `${msg.author.username}'s prompt: "${prompt}"`
-          );
-        }
-
-        const response = await openai.createImage({
-          prompt: prompt,
-          n: 1,
-          size: "256x256",
-        });
-        const imageUrl = response.data.data[0].url;
-        msg.reply(imageUrl);
+// #Image Generation
+client.on("messageCreate", async (msg) => {
+  /* Admin Overwrite */ //if (msg.author.id != '523571466835460107') return;
+  if (msg.author.bot) return;
+  if (msg.content.startsWith("<")) return;
+  if (msg.content.startsWith("https://")) return;
+  if (
+    msg.content.startsWith("!generate") ||
+    msg.content.startsWith("!gen") ||
+    msg.content.startsWith("!g")
+  ) {
+    try {
+      const prompt = msg.content.split(" ").slice(1).join(" ");
+      await msg.channel.sendTyping();
+      if (msg.author.id == "323321535643516928") {
         console.log(
-          "\x1b[36m%s\x1b[0m",
-          `SpadeBot: Image Generated Successfully`
+          "\x1b[35m%s\x1b[0m",
+          `${msg.author.username}'s prompt: "${prompt}"`
         );
-      } catch (error) {
-        console.log("\x1b[41m%s\x1b[0m", `OPENAI ERR: ${error}`);
+      } else if (msg.author.id == "668139777773666434") {
+        console.log(
+          "\x1b[33m%s\x1b[0m",
+          `${msg.author.username}'s prompt: "${prompt}"`
+        );
+      } else {
+        console.log(
+          "\x1b[37m%s\x1b[0m",
+          `${msg.author.username}'s prompt: "${prompt}"`
+        );
       }
+
+      const response = await openai.createImage({
+        prompt: prompt,
+        n: 1,
+        size: "256x256",
+      });
+      const imageUrl = response.data.data[0].url;
+      msg.reply(imageUrl);
+      console.log(
+        "\x1b[36m%s\x1b[0m",
+        `SpadeBot: Image Generated Successfully`
+      );
+    } catch (error) {
+      console.log("\x1b[41m%s\x1b[0m", `OPENAI ERR: ${error}`);
     }
-  });
+  }
 });
 
 client.login(process.env.TOKEN);
